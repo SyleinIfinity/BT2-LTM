@@ -2,7 +2,7 @@
 
 ## Tổng quan
 
-Dự án là một hệ thống chat TCP gồm ba module chính: `client`, `server`, và `common`. `common` chứa các lớp giao thức và các hàm kiểm tra bảo mật/chặn lỗi; `server` xử lý kết nối nhiều client, tiếp nhận và lưu ảnh; `client` là ứng dụng JavaFX cho người dùng gửi/nhận tin nhắn và upload ảnh.
+Dự án là một hệ thống chat TCP gồm hai module chính: `client` và `server`. Mọi logic xử lý và lớp giao thức đã được gom vào `server`; `client` giữ phần giao diện JavaFX và gửi/nhận dữ liệu qua TCP.
 
 ## Chức năng chính
 
@@ -20,19 +20,13 @@ Dự án là một hệ thống chat TCP gồm ba module chính: `client`, `serv
 
 ## Kiến trúc và các lớp quan trọng
 
-- `common`:
+- `server` (bao gồm cả các lớp giao thức/chiến lược xử lý):
   - `ProtocolParser` — phân tích dòng giao thức thành các message object
   - `messages/*` — `TextMessage`, `ImageRequest`, `OkMessage`, `ErrMessage`, `ProtocolMessage`
   - `security/Validator` và `Limits` — sanitize/validate và các hằng giới hạn (username max 24, message max 1000, file max 5MB, timeouts)
-- `server`:
-  - `ServerMain` — entrypoint để khởi chạy server (mặc định cổng 5555)
-  - `core/ChatServer` — vòng chọn (selector) duy nhất, quản lý `ClientSession`, đọc/ghi, broadcast
-  - `handler/ClientHandler` — xử lý dòng giao thức, bắt tay upload ảnh, lưu file tạm/thực, kiểm tra magic bytes bằng `FileHandler`
-  - Tệp upload lưu tại `server/uploads` (đường dẫn do `FileHandler` tạo)
-- `client`:
-  - `app/MainApp` — JavaFX entrypoint, khởi tạo `ChatClient` và inject `ChatController`
-  - `network/ChatClient` — socket TCP blocking I/O với thread đọc nền, gửi TEXT/IMAGE, thực hiện handshake ảnh và gửi bytes
-  - `ui/ChatController` — UI JavaFX, xử lý tương tác người dùng, hiển thị tin nhắn/ảnh, gọi `ChatClient` trong thread nền
+  - `core/ChatServer`, `handler/*` — logic server, upload và lưu file
+  - `Server` module: `ServerMain` — entrypoint để khởi chạy server (mặc định cổng 5555); `core/ChatServer` — vòng chọn (selector) duy nhất, quản lý `ClientSession`; `handler/ClientHandler` — xử lý giao thức và upload ảnh; tệp upload lưu tại `server/uploads`.
+  - `Client` module: `app/MainApp` — JavaFX entrypoint; `network/ChatClient` và `ui/ChatController` — giao diện và kết nối TCP. `Client` phụ thuộc vào `server` artifact để sử dụng các lớp giao thức đã được gom lại vào server.
 
 ## Bảo mật & Ràng buộc (điểm nổi bật)
 

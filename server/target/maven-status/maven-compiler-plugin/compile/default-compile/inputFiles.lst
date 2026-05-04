@@ -1,3 +1,13 @@
+F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\common\protocol\messages\ErrMessage.java
+F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\common\protocol\messages\ImageRequest.java
+F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\common\protocol\messages\OkMessage.java
+F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\common\protocol\messages\ProtocolMessage.java
+F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\common\protocol\messages\TextMessage.java
+F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\common\protocol\MessageType.java
+F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\common\protocol\ProtocolParser.java
+F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\common\security\Limits.java
+F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\common\security\ValidationException.java
+F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\common\security\Validator.java
 F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\server\core\ChatServer.java
 F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\server\core\ClientSession.java
 F:\23115053122114_K23_PhanVanKhanh\College_Year03\225\LTM\BTTHS3\server\src\main\java\server\handler\ClientHandler.java

@@ -19,7 +19,16 @@
         <javafx.version>21.0.4</javafx.version>
     </properties>
 
-    <!-- common module removed; common code is now colocated in server module -->
+    <!-- server artifact version managed here so child modules can depend on it without explicit version -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.btths3</groupId>
+                <artifactId>server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <pluginManagement>

@@ -17,7 +17,7 @@
     <dependencies>
         <dependency>
             <groupId>com.btths3</groupId>
-            <artifactId>common</artifactId>
+            <artifactId>server</artifactId>
         </dependency>
 
         <dependency>

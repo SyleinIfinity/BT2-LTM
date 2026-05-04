@@ -1,6 +1,16 @@
+common\protocol\messages\TextMessage.class
 server\core\ChatServer.class
-server\core\ClientSession.class
 server\handler\FileHandler.class
 server\handler\UploadTarget.class
+common\protocol\messages\OkMessage.class
+common\security\Limits.class
 server\handler\ClientHandler.class
+common\protocol\ProtocolParser.class
+server\core\ClientSession.class
+common\protocol\messages\ProtocolMessage.class
+common\protocol\MessageType.class
+common\protocol\messages\ErrMessage.class
+common\security\ValidationException.class
+common\protocol\messages\ImageRequest.class
+common\security\Validator.class
 server\ServerMain.class
