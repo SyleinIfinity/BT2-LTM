@@ -1,0 +1,8 @@
+client\ui\MessageViewModel.class
+client\network\ChatClient.class
+client\ui\ChatController$UsernameSupplier.class
+client\ui\ChatController.class
+client\ui\ChatController$MessageCell.class
+client\app\MainApp.class
+client\network\ChatClient$PendingImage.class
+client\network\MessageListener.class

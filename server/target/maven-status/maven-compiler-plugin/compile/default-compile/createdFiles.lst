@@ -1,0 +1,6 @@
+server\core\ChatServer.class
+server\core\ClientSession.class
+server\handler\FileHandler.class
+server\handler\UploadTarget.class
+server\handler\ClientHandler.class
+server\ServerMain.class

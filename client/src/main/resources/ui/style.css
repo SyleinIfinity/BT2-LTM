@@ -1,0 +1,64 @@
+.root {
+    -fx-font-family: "Segoe UI", "Inter", "Arial";
+    -fx-background-color: #f6f8fb;
+}
+
+.list-view {
+    -fx-background-color: transparent;
+    -fx-control-inner-background: transparent;
+}
+
+.bubble {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-padding: 10 12 10 12;
+    -fx-border-color: rgba(0,0,0,0.06);
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 10, 0.0, 0.0, 2.0);
+}
+
+.row-self {
+    -fx-alignment: CENTER_RIGHT;
+}
+
+.row-other {
+    -fx-alignment: CENTER_LEFT;
+}
+
+.bubble-self {
+    -fx-background-color: #dbeafe; /* sky-ish blue */
+}
+
+.bubble-other {
+    -fx-background-color: white;
+}
+
+.message-text {
+    -fx-fill: #1f2937;
+}
+
+.message-header {
+    -fx-fill: #111827;
+    -fx-font-weight: bold;
+}
+
+.system-text {
+    -fx-fill: #6b7280;
+}
+
+.system-cell {
+    -fx-padding: 6 10 6 10;
+}
+
+.text-cell, .image-cell {
+    -fx-padding: 8 10 8 10;
+}
+
+.message-image {
+    -fx-background-radius: 10;
+}
+
+.button {
+    -fx-background-radius: 10;
+    -fx-padding: 8 14 8 14;
+}
