@@ -2,10 +2,13 @@ package server.core;
 
 import common.protocol.messages.ErrMessage;
 import common.security.Limits;
+import server.config.ServerConfig;
+import java.util.logging.Logger;
 import server.handler.ClientHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
@@ -20,6 +23,7 @@ public class ChatServer {
     private final ClientHandler clientHandler;
     private Selector selector;
     private ServerSocketChannel serverChannel;
+    private static final Logger LOGGER = Logger.getLogger(ChatServer.class.getName());
 
     public ChatServer(int port) {
         this.port = port;
@@ -62,13 +66,28 @@ public class ChatServer {
                     if (key.isAcceptable()) {
                         handleAccept();
                     }
+                    if (!key.isValid()) {
+                        continue;
+                    }
                     if (key.isReadable()) {
                         handleRead(key);
+                    }
+                    if (!key.isValid()) {
+                        continue;
                     }
                     if (key.isWritable()) {
                         handleWrite(key);
                     }
+                } catch (CancelledKeyException ex) {
+                    ClientSession session = (ClientSession) key.attachment();
+                    // FIX: Cancelled key - disconnect session safely
+                    disconnect(session);
+                    LOGGER.info("Cancelled key - session disconnected");
                 } catch (IOException ex) {
+                    ClientSession session = (ClientSession) key.attachment();
+                    disconnect(session);
+                } catch (RuntimeException ex) {
+                    // FIX: Không để exception runtime từ một session làm sập toàn bộ server loop.
                     ClientSession session = (ClientSession) key.attachment();
                     disconnect(session);
                 }
@@ -80,14 +99,14 @@ public class ChatServer {
     private void disconnectTimedOutSessions(long nowMillis) {
         for (ClientSession session : new HashSet<>(sessions)) {
             long idleMs = nowMillis - session.getLastActivityMillis();
-            if (idleMs > Limits.IDLE_TIMEOUT_MS) {
+            if (idleMs > ServerConfig.getIdleTimeoutMs()) {
                 disconnect(session);
                 continue;
             }
 
             if (session.isReceivingFile() && session.getUploadStartMillis() > 0) {
                 long uploadMs = nowMillis - session.getUploadStartMillis();
-                if (uploadMs > Limits.UPLOAD_TIMEOUT_MS) {
+                if (uploadMs > ServerConfig.getUploadTimeoutMs()) {
                     sendLine(session, new ErrMessage("IMAGE", "UPLOAD_TIMEOUT", "Upload timed out.").toProtocolLine());
                     disconnect(session);
                 }
@@ -101,6 +120,13 @@ public class ChatServer {
         if (clientChannel == null) {
             return;
         }
+
+        if (sessions.size() >= ServerConfig.getMaxClients()) {
+            // FIX: Giới hạn số kết nối đồng thời để tránh cạn tài nguyên.
+            clientChannel.close();
+            return;
+        }
+
         clientChannel.configureBlocking(false);
         SelectionKey key = clientChannel.register(selector, SelectionKey.OP_READ);
         ClientSession session = new ClientSession(key, clientChannel);
@@ -191,7 +217,11 @@ public class ChatServer {
         } else {
             ops &= ~SelectionKey.OP_WRITE;
         }
-        key.interestOps(ops);
+        try {
+            key.interestOps(ops);
+        } catch (CancelledKeyException ignored) {
+            // FIX: Key đã bị hủy giữa chừng, bỏ qua để tránh crash selector loop.
+        }
     }
 
     private void shutdown() {

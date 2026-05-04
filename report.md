@@ -25,8 +25,10 @@ Dự án là một hệ thống chat TCP gồm hai module chính: `client` và `
   - `messages/*` — `TextMessage`, `ImageRequest`, `OkMessage`, `ErrMessage`, `ProtocolMessage`
   - `security/Validator` và `Limits` — sanitize/validate và các hằng giới hạn (username max 24, message max 1000, file max 5MB, timeouts)
   - `core/ChatServer`, `handler/*` — logic server, upload và lưu file
-  - `Server` module: `ServerMain` — entrypoint để khởi chạy server (mặc định cổng 5555); `core/ChatServer` — vòng chọn (selector) duy nhất, quản lý `ClientSession`; `handler/ClientHandler` — xử lý giao thức và upload ảnh; tệp upload lưu tại `server/uploads`.
-  - `Client` module: `app/MainApp` — JavaFX entrypoint; `network/ChatClient` và `ui/ChatController` — giao diện và kết nối TCP. `Client` phụ thuộc vào `server` artifact để sử dụng các lớp giao thức đã được gom lại vào server.
+- `client`:
+  - `app/MainApp` — JavaFX entrypoint
+  - `network/ChatClient`, `ui/ChatController` — giao diện và kết nối TCP
+  - Có bản sao package `common.protocol` và `common.security` trong `client/src/main/java/common` để chạy độc lập với server
 
 ## Bảo mật & Ràng buộc (điểm nổi bật)
 
@@ -35,28 +37,39 @@ Dự án là một hệ thống chat TCP gồm hai module chính: `client` và `
 - Server kiểm tra magic bytes ảnh trước khi thực sự ghi file; nếu không hợp lệ sẽ discard và gửi lỗi
 - Timeouts: idle client (2 phút), upload timeout (30s)
 
-## Hướng dẫn chạy (tổng quát)
+## Hướng dẫn chạy (phiên bản hiện tại)
 
-1. Build toàn bộ project (multi-module Maven):
+Hiện tại `client` và `server` là hai dự án Maven độc lập, mỗi thư mục có `pom.xml` riêng.
 
-```powershell
-mvn clean package
-```
-
-2. Chạy server (mặc định cổng 5555):
+1. Build server:
 
 ```powershell
-# từ thư mục gốc hoặc module server
-mvn -pl server exec:java -Dexec.mainClass=server.ServerMain
-# hoặc chạy trực tiếp class nếu build classpath sẵn
-java -cp server/target/classes;common/target/classes server.ServerMain
+mvn -f server/pom.xml clean package -DskipTests
 ```
 
-3. Chạy client JavaFX:
-   - Mở module `client` trong IDE (IntelliJ/NetBeans/Eclipse) và chạy `client.app.MainApp`, hoặc
-   - Nếu cấu hình JavaFX trong Maven, dùng plugin tương ứng (IDE thường đơn giản hơn cho JavaFX GUI)
+2. Chạy server (port mặc định 5555):
 
-Lưu ý: client mặc định kết nối tới `127.0.0.1:5555` (xem `MainApp`), có thể thay đổi bằng code.
+```powershell
+mvn -f server/pom.xml exec:java
+```
+
+3. Build client:
+
+```powershell
+mvn -f client/pom.xml clean package -DskipTests
+```
+
+4. Chạy client JavaFX:
+
+```powershell
+mvn -f client/pom.xml javafx:run
+```
+
+Lưu ý:
+
+- Chạy server trước, sau đó mới chạy client.
+- Client mặc định kết nối `127.0.0.1:5555` (trong `MainApp`).
+- Nếu không chạy được JavaFX bằng Maven trên máy cục bộ, có thể chạy `client.app.MainApp` trực tiếp từ IDE.
 
 ## Tệp tài nguyên giao diện
 
@@ -69,54 +82,23 @@ Lưu ý: client mặc định kết nối tới `127.0.0.1:5555` (xem `MainApp`)
 - Không có script đóng gói client thành jar executable với JavaFX, nên hướng dẫn dùng IDE
 - Thư mục `uploads/` trong repository gốc hiện có; server tạo `server/uploads` để lưu file upload
 
+## Demo chạy thực tế
+
+Đã test runtime theo luồng:
+
+1. `mvn -f server/pom.xml exec:java` -> server in: `Chat server started on port 5555`.
+2. Dùng TCP client PowerShell gửi: `TEXT|DemoClient2|Test sau khi fix`.
+3. Nhận về:
+   - `TEXT|SERVER|Connected to chat server.`
+   - `TEXT|DemoClient2|Test sau khi fix`
+
+Lỗi `CancelledKeyException` trong `ChatServer.loop()` đã được xử lý bằng cách:
+
+- kiểm tra lại `key.isValid()` sau `handleAccept()` và `handleRead()`;
+- bắt `CancelledKeyException` để disconnect session an toàn thay vì làm server dừng.
+
 ## Kết luận
 
-Dự án cung cấp một ứng dụng chat TCP cơ bản đầy đủ: chat văn bản, upload ảnh an toàn với handshake và kiểm tra magic-bytes, cùng các lớp xác thực/sàng lọc. Kiến trúc tách rõ `common`(giao thức), `server`(selector + handler), và `client`(JavaFX + mạng), phù hợp yêu cầu bài tập.
+Dự án hiện vận hành theo mô hình 2 thư mục độc lập (`client`, `server`), vẫn giữ đầy đủ chức năng chat text + upload ảnh, đồng thời đã vá lỗi runtime selector trên server.
 
 -- Kết thúc báo cáo
-
-## Chạy server và test nhanh (ví dụ thực tế tôi đã chạy)
-
-1. Build toàn bộ project (nếu chưa build):
-
-```powershell
-mvn clean package
-```
-
-2. Khởi chạy server (PowerShell lưu ý cách đặt property):
-
-```powershell
-# Cách an toàn cho PowerShell
-mvn -Dexec.mainClass=server.ServerMain -pl server exec:java
-
-# Hoặc đặt property trong dấu nháy
-mvn -pl server exec:java "-Dexec.mainClass=server.ServerMain"
-
-# Hoặc chạy trực tiếp classpath (sau khi build)
-java -cp "server\target\classes;common\target\classes" server.ServerMain
-```
-
-3. Test nhanh bằng `QuickClient` (tôi đã thêm `tools/QuickClient.java` để test):
-
-```powershell
-# Biên dịch test client
-javac -d tools tools\QuickClient.java
-# Chạy test client
-java -cp tools QuickClient
-```
-
-Ví dụ đầu ra tôi thấy khi chạy:
-
-- Server: `Chat server started on port 5555`
-- QuickClient: `Server replied: TEXT|SERVER|Connected to chat server.`
-
-Ghi chú về lỗi xuất hiện trong terminal khi tôi chạy: sau khi test, server in ra
-`CancelledKeyException` (stack trace). Điều này thường xảy ra khi một SelectionKey
-đã bị cancel (ví dụ client ngắt kết nối) và vòng selector cố gắng truy vấn trạng thái
-của key đã bị hủy. Ứng dụng vẫn hoạt động cho mục đích test — khuyến nghị là:
-
-- Chạy server trong terminal riêng và để nó chạy; chạy client trong terminal khác hoặc IDE.
-- Nếu muốn, có thể nâng cấp `ChatServer.loop()` bắt thêm `CancelledKeyException`
-  để log và tiếp tục thay vì để crash.
-
--- Kết thúc cập nhật

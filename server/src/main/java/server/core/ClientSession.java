@@ -1,6 +1,7 @@
 package server.core;
 
 import common.security.Limits;
+import server.config.ServerConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -23,6 +24,10 @@ public class ClientSession {
     private long pendingOutboundBytes;
 
     private long lastActivityMillis = System.currentTimeMillis();
+
+    // FIX: Theo dõi tần suất command để chặn abuse/spam protocol.
+    private long commandWindowStartMillis = System.currentTimeMillis();
+    private int commandCountInWindow;
 
     // File receiving state.
     private boolean receivingFile;
@@ -96,7 +101,7 @@ public class ClientSession {
     }
 
     public boolean appendLineByte(byte b) {
-        if (lineBuffer.size() + 1 > Limits.MAX_LINE_BYTES) {
+        if (lineBuffer.size() + 1 > ServerConfig.getMaxLineBytes()) {
             return false;
         }
         lineBuffer.write(b);
@@ -265,6 +270,16 @@ public class ClientSession {
 
     public long getUploadStartMillis() {
         return uploadStartMillis;
+    }
+
+    public boolean allowCommandRate() {
+        long now = System.currentTimeMillis();
+        if (now - commandWindowStartMillis > ServerConfig.getCommandRateWindowMs()) {
+            commandWindowStartMillis = now;
+            commandCountInWindow = 0;
+        }
+        commandCountInWindow++;
+        return commandCountInWindow <= ServerConfig.getMaxCommandsPerWindow();
     }
 
     private void touch() {

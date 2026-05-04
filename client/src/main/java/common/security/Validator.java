@@ -3,7 +3,6 @@ package common.security;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Locale;
-import server.config.ServerConfig;
 
 /**
  * Validation and sanitization utilities.
@@ -33,7 +32,7 @@ public final class Validator {
         if (clean.isEmpty()) {
             throw new ValidationException("Username is empty.");
         }
-        if (clean.length() > common.security.Limits.MAX_USERNAME_LENGTH) {
+        if (clean.length() > Limits.MAX_USERNAME_LENGTH) {
             throw new ValidationException("Username too long.");
         }
         return clean;
@@ -44,7 +43,7 @@ public final class Validator {
         if (clean.isEmpty()) {
             throw new ValidationException("Message is empty.");
         }
-        if (clean.length() > ServerConfig.getMaxMessageLength()) {
+        if (clean.length() > Limits.MAX_MESSAGE_LENGTH) {
             throw new ValidationException("Message too long.");
         }
         return clean;
@@ -87,7 +86,7 @@ public final class Validator {
         if (size <= 0) {
             throw new ValidationException("Invalid file size.");
         }
-        if (size > ServerConfig.getMaxFileSize()) {
+        if (size > Limits.MAX_FILE_SIZE) {
             throw new ValidationException("File too large (max 5MB).");
         }
     }

@@ -200,6 +200,10 @@ public class ChatClient {
                 break;
             }
             if (b != '\r') {
+                // FIX: Giới hạn line nhận từ server để tránh memory DoS phía client.
+                if (buffer.size() + 1 > Limits.MAX_LINE_BYTES) {
+                    throw new IOException("Protocol line too long.");
+                }
                 buffer.write(b);
             }
         }

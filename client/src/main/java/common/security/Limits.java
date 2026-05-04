@@ -13,12 +13,9 @@ public final class Limits {
     public static final int MAX_USERNAME_LENGTH = 24;
     public static final int MAX_MESSAGE_LENGTH = 1000;
 
-    // FIX: Giới hạn tần suất command để giảm nguy cơ spam/abuse protocol.
+    // FIX: Đồng bộ giới hạn để client có thể tự chặn spam trước khi gửi.
     public static final int MAX_COMMANDS_PER_WINDOW = 25;
     public static final long COMMAND_RATE_WINDOW_MS = 1000L;
-
-    // FIX: Giới hạn số kết nối đồng thời để tránh cạn tài nguyên.
-    public static final int MAX_CONNECTIONS = 200;
 
     /**
      * Maximum bytes allowed for a single protocol line (header). Prevents memory DoS
@@ -40,7 +37,7 @@ public final class Limits {
     /**
      * Idle timeout for a client session (server-side).
      */
-    // FIX: Giảm idle timeout để giải phóng tài nguyên nhanh hơn khi client treo.
+    // FIX: Đồng bộ timeout với server để tránh giữ kết nối treo lâu.
     public static final long IDLE_TIMEOUT_MS = 60_000L; // 60 seconds
 
     /**

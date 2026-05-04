@@ -2,6 +2,7 @@ common\protocol\messages\TextMessage.class
 server\core\ChatServer.class
 server\handler\FileHandler.class
 server\handler\UploadTarget.class
+server\util\LoggerUtil.class
 common\protocol\messages\OkMessage.class
 common\security\Limits.class
 server\handler\ClientHandler.class
@@ -12,5 +13,6 @@ common\protocol\MessageType.class
 common\protocol\messages\ErrMessage.class
 common\security\ValidationException.class
 common\protocol\messages\ImageRequest.class
+server\config\ServerConfig.class
 common\security\Validator.class
 server\ServerMain.class

@@ -16,7 +16,8 @@ public class FileHandler {
     private final Path uploadDir;
 
     public FileHandler(Path uploadDir) {
-        this.uploadDir = uploadDir;
+        // FIX: Chuẩn hóa đường dẫn base upload để chặn bypass qua path tricks.
+        this.uploadDir = uploadDir.toAbsolutePath().normalize();
     }
 
     public UploadTarget createUploadTarget(String originalName, long size)

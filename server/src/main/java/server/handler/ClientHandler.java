@@ -9,6 +9,7 @@ import common.protocol.messages.TextMessage;
 import common.security.ValidationException;
 import common.security.Validator;
 import server.core.ChatServer;
+import server.config.ServerConfig;
 import server.core.ClientSession;
 
 import java.io.IOException;
@@ -23,7 +24,8 @@ public class ClientHandler {
 
     public ClientHandler(ChatServer server) {
         this.server = server;
-        this.fileHandler = new FileHandler(Paths.get("server", "uploads"));
+        // PACK: use configured upload directory
+        this.fileHandler = new FileHandler(ServerConfig.getUploadDir());
     }
 
     public void consume(ClientSession session) throws IOException {
@@ -51,6 +53,8 @@ public class ClientHandler {
                 }
             } else if (b != '\r') {
                 if (!session.appendLineByte(b)) {
+                    // FIX: Trả lỗi protocol rõ ràng trước khi đóng kết nối khi line quá dài.
+                    server.sendLine(session, new ErrMessage("PROTO", "LINE_TOO_LONG", "Invalid input.").toProtocolLine());
                     server.disconnect(session);
                     return;
                 }
@@ -149,8 +153,23 @@ public class ClientHandler {
     }
 
     private void handleLine(ClientSession session, String line) throws IOException {
+        if (!session.allowCommandRate()) {
+            // FIX: Chặn spam command để giảm abuse protocol.
+            server.sendLine(session, new ErrMessage("PROTO", "RATE_LIMIT", "Invalid input.").toProtocolLine());
+            server.disconnect(session);
+            return;
+        }
+
         // Parse protocol command and route to handler.
-        ProtocolMessage message = protocolParser.parseLine(line);
+        ProtocolMessage message;
+        try {
+            message = protocolParser.parseLine(line);
+        } catch (RuntimeException ex) {
+            // FIX: Không để parse lỗi runtime làm sập phiên.
+            server.sendLine(session, new ErrMessage("PROTO", "MALFORMED", "Invalid input.").toProtocolLine());
+            server.disconnect(session);
+            return;
+        }
         if (message instanceof TextMessage textMessage) {
             handleText(session, textMessage);
             return;
@@ -159,7 +178,8 @@ public class ClientHandler {
             handleImage(session, imageRequest);
             return;
         }
-        server.sendLine(session, new ErrMessage("PROTO", "UNKNOWN_COMMAND", "Invalid command.").toProtocolLine());
+        // FIX: Ẩn chi tiết nội bộ, chỉ trả thông báo lỗi chung.
+        server.sendLine(session, new ErrMessage("PROTO", "UNKNOWN_COMMAND", "Invalid input.").toProtocolLine());
     }
 
     private void handleText(ClientSession session, TextMessage incoming) {
@@ -169,7 +189,8 @@ public class ClientHandler {
             String message = Validator.validateMessage(incoming.message());
             server.broadcastLine(new TextMessage(username, message).toProtocolLine());
         } catch (ValidationException ex) {
-            server.sendLine(session, new ErrMessage("TEXT", "VALIDATION_FAILED", ex.getMessage()).toProtocolLine());
+            // FIX: Không lộ chi tiết validation nội bộ cho client.
+            server.sendLine(session, new ErrMessage("TEXT", "VALIDATION_FAILED", "Invalid input.").toProtocolLine());
         }
     }
 
@@ -184,7 +205,8 @@ public class ClientHandler {
         try {
             username = Validator.validateUsername(incoming.username());
         } catch (ValidationException ex) {
-            server.sendLine(session, new ErrMessage("IMAGE", "BAD_USERNAME", ex.getMessage()).toProtocolLine());
+            // FIX: Không lộ chi tiết validation nội bộ cho client.
+            server.sendLine(session, new ErrMessage("IMAGE", "BAD_USERNAME", "Invalid input.").toProtocolLine());
             server.disconnect(session);
             return;
         }
@@ -195,7 +217,8 @@ public class ClientHandler {
         try {
             Validator.validateFileSize(size);
         } catch (ValidationException ex) {
-            server.sendLine(session, new ErrMessage("IMAGE", "BAD_FILE_SIZE", ex.getMessage()).toProtocolLine());
+            // FIX: Không lộ chi tiết validation nội bộ cho client.
+            server.sendLine(session, new ErrMessage("IMAGE", "BAD_FILE_SIZE", "Invalid input.").toProtocolLine());
             return;
         }
 
@@ -216,7 +239,8 @@ public class ClientHandler {
             );
             server.sendLine(session, new OkMessage("IMAGE", target.getStoredFileName()).toProtocolLine());
         } catch (ValidationException ex) {
-            server.sendLine(session, new ErrMessage("IMAGE", "VALIDATION_FAILED", ex.getMessage()).toProtocolLine());
+            // FIX: Không lộ chi tiết validation nội bộ cho client.
+            server.sendLine(session, new ErrMessage("IMAGE", "VALIDATION_FAILED", "Invalid input.").toProtocolLine());
         } catch (IOException ex) {
             server.sendLine(session, new ErrMessage("IMAGE", "SERVER_ERROR", "Server error while saving file.").toProtocolLine());
         }
